@@ -6,12 +6,14 @@
 
 #include <string>
 
-#include <frc/TimedRobot.h>
-#include <frc/smartdashboard/SendableChooser.h>
-#include <frc/Spark.h>
-//#include <frc/XboxController.h>
-#include <frc/Joystick.h>
-#include <frc/drive/MecanumDrive.h>
+// #include <frc/TimedRobot.h>
+// #include <frc/smartdashboard/SendableChooser.h>
+// #include <frc/Spark.h>
+// #include <frc/XboxController.h>
+// //#include <frc/>
+// #include <frc/drive/MecanumDrive.h>
+// #include <frc/VictorSP.h>
+#include <frc/WPILib.h>
 class Robot : public frc::TimedRobot
 {
   public:
@@ -32,7 +34,10 @@ class Robot : public frc::TimedRobot
     frc::Spark talonTR{2};
     frc::Spark talonBL{3};
     frc::Spark talonBR{1};
-    //frc::XboxController Controller{0};
-    frc::Joystick Controller{0};
+    frc::XboxController Controller{0};
+    frc::XboxController ControllerA{1};
+    //frc::Joystick Controller{0};
     frc::MecanumDrive mDrive{talonTL,talonBL,talonTR,talonBR};
+    frc::VictorSP VacuuMotor{5};
+    frc::VictorSP VacuuMotorPivot{6};
 };
