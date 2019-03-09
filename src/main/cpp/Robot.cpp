@@ -73,7 +73,14 @@ void Robot::TeleopPeriodic() {
   }else {
     VacuuMotor.Set(0);
   }
-};
+  //VacuuMotorPivot.Set(ControllerA.GetX(frc::GenericHID::kLeftHand));
+
+  armSR.Set(ControlMode::PercentOutput, ControllerA.GetY(frc::GenericHID::kRightHand));
+  armSL.Set(ControlMode::PercentOutput, -1*ControllerA.GetY(frc::GenericHID::kRightHand));
+
+  armER.Set(ControlMode::PercentOutput, ControllerA.GetY(frc::GenericHID::kLeftHand));
+  armEL.Set(ControlMode::PercentOutput, -1*ControllerA.GetY(frc::GenericHID::kLeftHand));
+}
 
 void Robot::TestPeriodic() {}
 
