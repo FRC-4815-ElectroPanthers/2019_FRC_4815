@@ -6,12 +6,9 @@
 
 #include <string>
 
-#include <frc/TimedRobot.h>
-#include <frc/smartdashboard/SendableChooser.h>
-#include <frc/Spark.h>
-//#include <frc/XboxController.h>
-#include <frc/Joystick.h>
-#include <frc/drive/MecanumDrive.h>
+#include <frc/WPILib.h>
+#include <ctre/Phoenix.h>
+
 class Robot : public frc::TimedRobot
 {
   public:
@@ -23,6 +20,17 @@ class Robot : public frc::TimedRobot
     void TeleopPeriodic() override;
     void TestPeriodic() override;
 
+//Up goes right
+//Down goes left
+//Right goes straight
+//Left goes backwards
+
+//Up goes forward
+//Down goes backward
+//Right turns right
+//Left turns left
+
+//Right stick strafes left and right
   private:
     frc::SendableChooser<std::string> m_chooser;
     const std::string kAutoNameDefault = "Default";
@@ -32,7 +40,14 @@ class Robot : public frc::TimedRobot
     frc::Spark talonTR{2};
     frc::Spark talonBL{3};
     frc::Spark talonBR{1};
-    //frc::XboxController Controller{0};
-    frc::Joystick Controller{0};
+    frc::XboxController Controller{0};
+    frc::XboxController ControllerA{1};
+    //frc::Joystick Controller{0};
     frc::MecanumDrive mDrive{talonTL,talonBL,talonTR,talonBR};
+    TalonSRX armSR{4};
+    TalonSRX armSL{1};
+    TalonSRX armER{3};
+    TalonSRX armEL{2};
+    frc::VictorSP VacuuMotor{5};
+    frc::VictorSP VacuuMotorPivot{6};
 };

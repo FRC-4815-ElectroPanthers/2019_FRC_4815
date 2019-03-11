@@ -64,13 +64,23 @@ void Robot::TeleopInit() {}
 
 void Robot::TeleopPeriodic() {
   mDrive.DriveCartesian(
-    Controller.GetZ(),
-    -1*Controller.GetY(),
-    Controller.GetX()
+    Controller.GetX(frc::GenericHID::kRightHand),
+    -1*Controller.GetY(frc::GenericHID::kLeftHand),
+    Controller.GetX(frc::GenericHID::kLeftHand)
   );
-  
+  if (ControllerA.GetBumper(frc::GenericHID::kRightHand)){
+    VacuuMotor.Set(1);
+  }else {
+    VacuuMotor.Set(0);
+  }
+  //VacuuMotorPivot.Set(ControllerA.GetX(frc::GenericHID::kLeftHand));
 
-};
+  armSR.Set(ControlMode::PercentOutput, ControllerA.GetY(frc::GenericHID::kRightHand));
+  armSL.Set(ControlMode::PercentOutput, -1*ControllerA.GetY(frc::GenericHID::kRightHand));
+
+  armER.Set(ControlMode::PercentOutput, ControllerA.GetY(frc::GenericHID::kLeftHand));
+  armEL.Set(ControlMode::PercentOutput, -1*ControllerA.GetY(frc::GenericHID::kLeftHand));
+}
 
 void Robot::TestPeriodic() {}
 
