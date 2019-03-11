@@ -16,6 +16,51 @@ void Robot::RobotInit() {
   m_chooser.AddOption(kAutoNameCustom, kAutoNameCustom);
   frc::SmartDashboard::PutData("Auto Modes", &m_chooser);
   mDrive.SetRightSideInverted(false);
+
+  armSR.ConfigFactoryDefault();
+  armSL.ConfigFactoryDefault();
+  armER.ConfigFactoryDefault();
+  armEL.ConfigFactoryDefault();
+
+  int shoulderAbsPos = armSR.GetSelectedSensorPosition() & 0xFFF;
+  int elbowAbsPos = armER.GetSelectedSensorPosition() & 0xFFF;
+
+  armSR.SetSelectedSensorPosition(shoulderAbsPos);
+  armER.SetSelectedSensorPosition(elbowAbsPos);
+
+  armSR.ConfigSelectedFeedbackSensor(FeedbackDevice::CTRE_MagEncoder_Relative);
+  armER.ConfigSelectedFeedbackSensor(FeedbackDevice::CTRE_MagEncoder_Relative);
+
+  armSR.SetSensorPhase(false);
+  armER.SetSensorPhase(false);
+
+  armSR.ConfigNominalOutputForward(0);
+	armSR.ConfigNominalOutputReverse(0);
+  armSR.ConfigPeakOutputForward(1);
+	armSR.ConfigPeakOutputReverse(-1);
+
+  armER.ConfigNominalOutputForward(0);
+	armER.ConfigNominalOutputReverse(0);
+  armER.ConfigPeakOutputForward(1);
+	armER.ConfigPeakOutputReverse(-1);
+
+  armSR.Config_kF(0, 0.0);
+	armSR.Config_kP(0, 0.1);
+	armSR.Config_kI(0, 0.0);
+	armSR.Config_kD(0, 0.0);
+
+  armER.Config_kF(0, 0.0);
+	armER.Config_kP(0, 0.1);
+	armER.Config_kI(0, 0.0);
+	armER.Config_kD(0, 0.0);
+
+  armSL.Follow(armSR);
+  armEL.Follow(armER);
+
+  armSR.SetInverted(false);
+  armSL.SetInverted(InvertType::OpposeMaster);
+  armER.SetInverted(false);
+  armEL.SetInverted(InvertType::OpposeMaster);
 }
 
 /**
@@ -76,10 +121,10 @@ void Robot::TeleopPeriodic() {
   //VacuuMotorPivot.Set(ControllerA.GetX(frc::GenericHID::kLeftHand));
 
   armSR.Set(ControlMode::PercentOutput, ControllerA.GetY(frc::GenericHID::kRightHand));
-  armSL.Set(ControlMode::PercentOutput, -1*ControllerA.GetY(frc::GenericHID::kRightHand));
+  //armSL.Set(ControlMode::PercentOutput, -1*ControllerA.GetY(frc::GenericHID::kRightHand));
 
   armER.Set(ControlMode::PercentOutput, ControllerA.GetY(frc::GenericHID::kLeftHand));
-  armEL.Set(ControlMode::PercentOutput, -1*ControllerA.GetY(frc::GenericHID::kLeftHand));
+  //armEL.Set(ControlMode::PercentOutput, -1*ControllerA.GetY(frc::GenericHID::kLeftHand));
 }
 
 void Robot::TestPeriodic() {}
