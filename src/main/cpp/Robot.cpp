@@ -25,11 +25,14 @@ void Robot::RobotInit() {
   int shoulderAbsPos = armSR.GetSelectedSensorPosition() & 0xFFF;
   int elbowAbsPos = armER.GetSelectedSensorPosition() & 0xFFF;
 
-  armSR.SetSelectedSensorPosition(shoulderAbsPos);
+  armSR.SetSelectedSensorPosition(0);//shoulderAbsPos);
   armER.SetSelectedSensorPosition(elbowAbsPos);
 
   armSR.ConfigSelectedFeedbackSensor(FeedbackDevice::CTRE_MagEncoder_Relative);
   armER.ConfigSelectedFeedbackSensor(FeedbackDevice::CTRE_MagEncoder_Relative);
+
+  armSR.ConfigFeedbackNotContinuous(true);
+  armER.ConfigFeedbackNotContinuous(true);
 
   armSR.SetSensorPhase(false);
   armER.SetSensorPhase(false);
@@ -45,14 +48,14 @@ void Robot::RobotInit() {
 	armER.ConfigPeakOutputReverse(-1);
 
   armSR.Config_kF(0, 0.0);
-	armSR.Config_kP(0, 0.1);
-	armSR.Config_kI(0, 0.0);
-	armSR.Config_kD(0, 0.0);
+	armSR.Config_kP(0, 32);
+	armSR.Config_kI(0, 0.00032);
+	armSR.Config_kD(0, 1023);
 
   armER.Config_kF(0, 0.0);
-	armER.Config_kP(0, 0.1);
-	armER.Config_kI(0, 0.0);
-	armER.Config_kD(0, 0.0);
+	armER.Config_kP(0, 8);
+	armER.Config_kI(0, 0.0024);
+	armER.Config_kD(0, 100);
 
   armSL.Follow(armSR);
   armEL.Follow(armER);
@@ -105,26 +108,41 @@ void Robot::AutonomousPeriodic() {
   }
 }
 
-void Robot::TeleopInit() {}
+void Robot::TeleopInit() {
+  prevPosShoulder = armSR.GetSelectedSensorPosition();
+  prevPosElbow = armER.GetSelectedSensorPosition();
+}
 
 void Robot::TeleopPeriodic() {
+  double motorOutput = armSR.GetMotorOutputPercent();
+  double targetPositionRotations;
+
   mDrive.DriveCartesian(
     Controller.GetX(frc::GenericHID::kRightHand),
     -1*Controller.GetY(frc::GenericHID::kLeftHand),
     Controller.GetX(frc::GenericHID::kLeftHand)
   );
+
   if (ControllerA.GetBumper(frc::GenericHID::kRightHand)){
-    VacuuMotor.Set(1);
+    targetPositionRotations = -0.125*4096;
+    armSR.Set(ControlMode::Position, targetPositionRotations);
+    //VacuuMotor.Set(1);
   }else {
-    VacuuMotor.Set(0);
+    armSR.Set(ControlMode::PercentOutput, ControllerA.GetY(frc::GenericHID::kRightHand));
+    //VacuuMotor.Set(0);
   }
-  //VacuuMotorPivot.Set(ControllerA.GetX(frc::GenericHID::kLeftHand));
+  VacuuMotorPivot.Set(0.5*(ControllerA.GetTriggerAxis(frc::GenericHID::kLeftHand) + -1*ControllerA.GetTriggerAxis(frc::GenericHID::kRightHand)));
 
-  armSR.Set(ControlMode::PercentOutput, ControllerA.GetY(frc::GenericHID::kRightHand));
-  //armSL.Set(ControlMode::PercentOutput, -1*ControllerA.GetY(frc::GenericHID::kRightHand));
+  if(ControllerA.GetBumper(frc::GenericHID::kLeftHand)){
+    targetPositionRotations = -0.125*4096;
+    armER.Set(ControlMode::Position, targetPositionRotations);
+  }else{
+    armER.Set(ControlMode::PercentOutput, ControllerA.GetY(frc::GenericHID::kLeftHand));
+  }
 
-  armER.Set(ControlMode::PercentOutput, ControllerA.GetY(frc::GenericHID::kLeftHand));
-  //armEL.Set(ControlMode::PercentOutput, -1*ControllerA.GetY(frc::GenericHID::kLeftHand));
+  prevPosShoulder = armSR.GetSelectedSensorPosition();
+  prevPosElbow = armER.GetSelectedSensorPosition();
+  
 }
 
 void Robot::TestPeriodic() {}
