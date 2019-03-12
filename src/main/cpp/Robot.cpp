@@ -114,9 +114,12 @@ void Robot::TeleopInit() {
 }
 
 void Robot::TeleopPeriodic() {
-  double motorOutput = armSR.GetMotorOutputPercent();
-  double targetPositionRotations;
+  double targetPosShoulder = prevPosShoulder; 
+  double targetPosElbow = prevPosElbow; 
 
+  double contAXR = Deadband(ControllerA.GetX(frc::GenericHID::kRightHand), 0.25);
+  double contAXL = Deadband(ControllerA.GetX(frc::GenericHID::kLeftHand), 0.25);
+  
   mDrive.DriveCartesian(
     Controller.GetX(frc::GenericHID::kRightHand),
     -1*Controller.GetY(frc::GenericHID::kLeftHand),
@@ -124,18 +127,19 @@ void Robot::TeleopPeriodic() {
   );
 
   if (ControllerA.GetBumper(frc::GenericHID::kRightHand)){
-    targetPositionRotations = -0.125*4096;
-    armSR.Set(ControlMode::Position, targetPositionRotations);
+    targetPosShoulder += -256*contAXR;
+    armSR.Set(ControlMode::Position, targetPosShoulder);
     //VacuuMotor.Set(1);
   }else {
     armSR.Set(ControlMode::PercentOutput, ControllerA.GetY(frc::GenericHID::kRightHand));
     //VacuuMotor.Set(0);
   }
+  
   VacuuMotorPivot.Set(0.5*(ControllerA.GetTriggerAxis(frc::GenericHID::kLeftHand) + -1*ControllerA.GetTriggerAxis(frc::GenericHID::kRightHand)));
 
   if(ControllerA.GetBumper(frc::GenericHID::kLeftHand)){
-    targetPositionRotations = -0.125*4096;
-    armER.Set(ControlMode::Position, targetPositionRotations);
+    targetPosElbow += -256*contAXL;
+    armER.Set(ControlMode::Position, targetPosElbow);
   }else{
     armER.Set(ControlMode::PercentOutput, ControllerA.GetY(frc::GenericHID::kLeftHand));
   }
@@ -146,6 +150,16 @@ void Robot::TeleopPeriodic() {
 }
 
 void Robot::TestPeriodic() {}
+
+double Robot::Deadband(double in, double dis){
+  double out = in;
+
+  if(out < dis || out > -1*dis){
+    out = 0;
+  }
+
+  return out;
+}
 
 #ifndef RUNNING_FRC_TESTS
 int main() { return frc::StartRobot<Robot>(); }

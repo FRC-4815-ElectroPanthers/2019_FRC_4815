@@ -51,6 +51,7 @@ class Robot : public frc::TimedRobot
     frc::VictorSP VacuuMotor{5};
     frc::VictorSP VacuuMotorPivot{6};
 
-    int _loops = 0;
     double prevPosShoulder, prevPosElbow;
+
+    double Deadband(double, double);
 };
