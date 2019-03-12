@@ -64,6 +64,11 @@ void Robot::RobotInit() {
   armSL.SetInverted(InvertType::OpposeMaster);
   armER.SetInverted(false);
   armEL.SetInverted(InvertType::OpposeMaster);
+
+  camera1 = frc::CameraServer::GetInstance()->StartAutomaticCapture(0);
+  camera2 = frc::CameraServer::GetInstance()->StartAutomaticCapture(1);
+  camera1.SetConnectionStrategy(cs::VideoSource::ConnectionStrategy::kConnectionKeepOpen);
+  camera2.SetConnectionStrategy(cs::VideoSource::ConnectionStrategy::kConnectionKeepOpen);
 }
 
 /**
@@ -142,6 +147,14 @@ void Robot::TeleopPeriodic() {
     armER.Set(ControlMode::Position, targetPosElbow);
   }else{
     armER.Set(ControlMode::PercentOutput, ControllerA.GetY(frc::GenericHID::kLeftHand));
+  }
+
+  if (Controller.GetBumper(frc::GenericHID::kLeftHand)) {
+    printf("Setting camera 2\n");
+    nt::NetworkTableInstance::GetDefault().GetTable("")->PutString("CameraSelection", camera2.GetName());
+  } else {
+    printf("Setting camera 1\n");
+    nt::NetworkTableInstance::GetDefault().GetTable("")->PutString("CameraSelection", camera1.GetName());
   }
 
   prevPosShoulder = armSR.GetSelectedSensorPosition();

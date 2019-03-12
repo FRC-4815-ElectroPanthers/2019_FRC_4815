@@ -50,6 +50,8 @@ class Robot : public frc::TimedRobot
     TalonSRX armEL{2};
     frc::VictorSP VacuuMotor{5};
     frc::VictorSP VacuuMotorPivot{6};
+    cs::UsbCamera camera1;
+    cs::UsbCamera camera2;
 
     double prevPosShoulder, prevPosElbow;
 
