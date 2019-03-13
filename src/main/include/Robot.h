@@ -48,12 +48,12 @@ class Robot : public frc::TimedRobot
     TalonSRX armSL{1};
     TalonSRX armER{3};
     TalonSRX armEL{2};
-    frc::VictorSP VacuuMotor{5};
+    frc::PWMVictorSPX VacuuMotor{5};
     frc::VictorSP VacuuMotorPivot{6};
     cs::UsbCamera camera1;
     cs::UsbCamera camera2;
 
     double prevPosShoulder, prevPosElbow;
-
+    int loops = 0, pidloops = 0;
     double Deadband(double, double);
 };

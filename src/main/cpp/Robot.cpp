@@ -67,8 +67,8 @@ void Robot::RobotInit() {
 
   camera1 = frc::CameraServer::GetInstance()->StartAutomaticCapture(0);
   camera2 = frc::CameraServer::GetInstance()->StartAutomaticCapture(1);
-  camera1.SetConnectionStrategy(cs::VideoSource::ConnectionStrategy::kConnectionKeepOpen);
-  camera2.SetConnectionStrategy(cs::VideoSource::ConnectionStrategy::kConnectionKeepOpen);
+  // camera1.SetConnectionStrategy(cs::VideoSource::ConnectionStrategy::kConnectionKeepOpen);
+  // camera2.SetConnectionStrategy(cs::VideoSource::ConnectionStrategy::kConnectionKeepOpen);
 }
 
 /**
@@ -122,8 +122,8 @@ void Robot::TeleopPeriodic() {
   double targetPosShoulder = prevPosShoulder; 
   double targetPosElbow = prevPosElbow; 
 
-  double contAXR = Deadband(ControllerA.GetX(frc::GenericHID::kRightHand), 0.25);
-  double contAXL = Deadband(ControllerA.GetX(frc::GenericHID::kLeftHand), 0.25);
+  double contAXR = Deadband(ControllerA.GetY(frc::GenericHID::kRightHand), 0.25);
+  double contAXL = Deadband(ControllerA.GetY(frc::GenericHID::kLeftHand), 0.25);
   
   mDrive.DriveCartesian(
     Controller.GetX(frc::GenericHID::kRightHand),
@@ -131,34 +131,30 @@ void Robot::TeleopPeriodic() {
     Controller.GetX(frc::GenericHID::kLeftHand)
   );
 
-  if (ControllerA.GetBumper(frc::GenericHID::kRightHand)){
-    targetPosShoulder += -256*contAXR;
+    targetPosShoulder = 25*contAXR + prevPosShoulder;
     armSR.Set(ControlMode::Position, targetPosShoulder);
-    //VacuuMotor.Set(1);
-  }else {
-    armSR.Set(ControlMode::PercentOutput, ControllerA.GetY(frc::GenericHID::kRightHand));
-    //VacuuMotor.Set(0);
-  }
   
   VacuuMotorPivot.Set(0.5*(ControllerA.GetTriggerAxis(frc::GenericHID::kLeftHand) + -1*ControllerA.GetTriggerAxis(frc::GenericHID::kRightHand)));
-
-  if(ControllerA.GetBumper(frc::GenericHID::kLeftHand)){
-    targetPosElbow += -256*contAXL;
+  
+    targetPosElbow = -12*contAXL + prevPosElbow;
     armER.Set(ControlMode::Position, targetPosElbow);
-  }else{
-    armER.Set(ControlMode::PercentOutput, ControllerA.GetY(frc::GenericHID::kLeftHand));
+
+  if (ControllerA.GetAButton()){
+    VacuuMotor.Set(-1);
+  }else {
+    VacuuMotor.Set(0);
   }
 
-  if (Controller.GetBumper(frc::GenericHID::kLeftHand)) {
-    printf("Setting camera 2\n");
-    nt::NetworkTableInstance::GetDefault().GetTable("")->PutString("CameraSelection", camera2.GetName());
-  } else {
-    printf("Setting camera 1\n");
-    nt::NetworkTableInstance::GetDefault().GetTable("")->PutString("CameraSelection", camera1.GetName());
-  }
+  // if(++loops >= 10){
+  //   std::cout << "contAXR: " << contAXR << std::endl;
+  //   std::cout << "PrevPosShoulder: " << prevPosShoulder << std::endl;
+  //   std::cout << "TargetPosShoulder: " << targetPosShoulder << std::endl;
+  //   std::cout << "Error: " << armSR.GetClosedLoopError() << std::endl << std::endl;
+  //   loops = 0;
+  // }
 
-  prevPosShoulder = armSR.GetSelectedSensorPosition();
-  prevPosElbow = armER.GetSelectedSensorPosition();
+  prevPosShoulder = targetPosShoulder;//armSR.GetSelectedSensorPosition();
+  prevPosElbow = targetPosElbow;//armER.GetSelectedSensorPosition();
   
 }
 
@@ -167,7 +163,7 @@ void Robot::TestPeriodic() {}
 double Robot::Deadband(double in, double dis){
   double out = in;
 
-  if(out < dis || out > -1*dis){
+  if(out < dis && out > -1*dis){
     out = 0;
   }
 
