@@ -8,8 +8,9 @@
 #include "Robot.h"
 
 #include <iostream>
-
+#include <cmath>
 #include <frc/smartdashboard/SmartDashboard.h>
+#define PI 3.14159265358979323
 
 void Robot::RobotInit() {
   m_chooser.SetDefaultOption(kAutoNameDefault, kAutoNameDefault);
@@ -119,11 +120,28 @@ void Robot::TeleopInit() {
 }
 
 void Robot::TeleopPeriodic() {
-  double targetPosShoulder = prevPosShoulder; 
-  double targetPosElbow = prevPosElbow; 
+  double targetPosShoulder; 
+  double targetPosElbow; 
 
   double contAXR = Deadband(ControllerA.GetY(frc::GenericHID::kRightHand), 0.25);
   double contAXL = Deadband(ControllerA.GetY(frc::GenericHID::kLeftHand), 0.25);
+
+  targetPosShoulder = 25*contAXR + prevPosShoulder;
+  targetPosElbow = 12*contAXL + prevPosElbow;
+
+  double bounds = cos(targetPosShoulder/4096*2*PI - targetPosElbow/4096*2*PI)-cos(targetPosShoulder/4096*2*PI);
+  if(-0.61 < bounds && bounds < 1.61){
+    targetPosShoulder = prevPosShoulder;
+    targetPosElbow = prevPosElbow;
+  }
+
+  if(targetPosElbow > 0){
+    targetPosElbow = 0;
+  }  
+
+  if(targetPosShoulder > 0{
+    targetPosShoulder = 0;
+  }
   
   mDrive.DriveCartesian(
     Controller.GetX(frc::GenericHID::kRightHand),
@@ -131,14 +149,11 @@ void Robot::TeleopPeriodic() {
     Controller.GetX(frc::GenericHID::kLeftHand)
   );
 
-    targetPosShoulder = 25*contAXR + prevPosShoulder;
-    armSR.Set(ControlMode::Position, targetPosShoulder);
+  armSR.Set(ControlMode::Position, targetPosShoulder);
+  armER.Set(ControlMode::Position, targetPosElbow);
   
   VacuuMotorPivot.Set(0.5*(ControllerA.GetTriggerAxis(frc::GenericHID::kLeftHand) + -1*ControllerA.GetTriggerAxis(frc::GenericHID::kRightHand)));
   
-    targetPosElbow = -12*contAXL + prevPosElbow;
-    armER.Set(ControlMode::Position, targetPosElbow);
-
   if (ControllerA.GetAButton()){
     VacuuMotor.Set(-1);
   }else {
