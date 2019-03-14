@@ -139,7 +139,7 @@ void Robot::TeleopPeriodic() {
     targetPosElbow = 0;
   }  
 
-  if(targetPosShoulder > 0{
+  if(targetPosShoulder > 0){
     targetPosShoulder = 0;
   }
   
