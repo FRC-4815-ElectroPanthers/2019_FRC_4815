@@ -18,6 +18,17 @@ void Robot::RobotInit() {
   frc::SmartDashboard::PutData("Auto Modes", &m_chooser);
   mDrive.SetRightSideInverted(false);
 
+  elevator.RestoreFactoryDefaults();
+  elevator.SetInverted(false);
+
+  elevatorPID.SetP(0.0);
+  elevatorPID.SetI(0.0);
+  elevatorPID.SetD(0.0);
+  elevatorPID.SetFF(0.0);
+  //elevatorPID.SetIMaxAccum();
+
+  elevatorEncoder.SetPositionConversionFactor(1.0);
+
   armSR.ConfigFactoryDefault();
   armSL.ConfigFactoryDefault();
   armER.ConfigFactoryDefault();
@@ -160,13 +171,11 @@ void Robot::TeleopPeriodic() {
     VacuuMotor.Set(0);
   }
 
-  // if(++loops >= 10){
-  //   std::cout << "contAXR: " << contAXR << std::endl;
-  //   std::cout << "PrevPosShoulder: " << prevPosShoulder << std::endl;
-  //   std::cout << "TargetPosShoulder: " << targetPosShoulder << std::endl;
-  //   std::cout << "Error: " << armSR.GetClosedLoopError() << std::endl << std::endl;
-  //   loops = 0;
-  // }
+  if(ControllerA.GetBumper(frc::GenericHID::kRightHand)){
+    elevatorPID.SetReference(512, rev::kPosition);
+  }
+
+  std::cout << "Elevator position: " << elevatorEncoder.GetPosition() << std::endl;
 
   prevPosShoulder = targetPosShoulder;//armSR.GetSelectedSensorPosition();
   prevPosElbow = targetPosElbow;//armER.GetSelectedSensorPosition();

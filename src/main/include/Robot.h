@@ -8,6 +8,7 @@
 
 #include <frc/WPILib.h>
 #include <ctre/Phoenix.h>
+#include <rev/CANSparkMax.h>
 
 class Robot : public frc::TimedRobot
 {
@@ -50,6 +51,9 @@ class Robot : public frc::TimedRobot
     TalonSRX armEL{2};
     frc::PWMVictorSPX VacuuMotor{5};
     frc::VictorSP VacuuMotorPivot{6};
+    rev::CANSparkMax elevator{1, rev::CANSparkMaxLowLevel::MotorType::kBrushless};
+    rev::CANPIDController elevatorPID{elevator};
+    rev::CANEncoder elevatorEncoder{elevator};
     cs::UsbCamera camera1;
     cs::UsbCamera camera2;
 
