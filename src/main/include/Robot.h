@@ -37,28 +37,40 @@ class Robot : public frc::TimedRobot
     const std::string kAutoNameDefault = "Default";
     const std::string kAutoNameCustom = "My Auto";
     std::string m_autoSelected;
-    frc::Spark talonTL{4};
-    frc::Spark talonTR{2};
-    frc::Spark talonBL{3};
-    frc::Spark talonBR{1};
+    
     frc::XboxController Controller{0};
     frc::XboxController ControllerA{1};
-    //frc::Joystick Controller{0};
+
+    rev::CANSparkMax talonTL{4, rev::CANSparkMaxLowLevel::MotorType::kBrushed};
+    rev::CANSparkMax talonTR{2, rev::CANSparkMaxLowLevel::MotorType::kBrushed};
+    rev::CANSparkMax talonBL{3, rev::CANSparkMaxLowLevel::MotorType::kBrushed};
+    rev::CANSparkMax talonBR{1, rev::CANSparkMaxLowLevel::MotorType::kBrushed};
     frc::MecanumDrive mDrive{talonTL,talonBL,talonTR,talonBR};
-    TalonSRX armSR{4};
-    TalonSRX armSL{1};
-    TalonSRX armER{3};
-    TalonSRX armEL{2};
-    frc::PWMVictorSPX VacuuMotor{5};
-    frc::VictorSP VacuuMotorPivot{6};
-    rev::CANSparkMax elevator{1, rev::CANSparkMaxLowLevel::MotorType::kBrushless};
+    
+    rev::CANSparkMax elevator{5, rev::CANSparkMaxLowLevel::MotorType::kBrushless};
     rev::CANPIDController elevatorPID{elevator};
     rev::CANEncoder elevatorEncoder{elevator};
+    //limitswitch declarations
+
+    TalonSRX gripperR{6};
+    TalonSRX gripperL{7};
+    
     cs::UsbCamera camera1;
     cs::UsbCamera camera2;
 
-    double prevPosShoulder, prevPosElbow;
-    int loops = 0, pidloops = 0;
+    double prevElevatorPos;
+    double kP = 0.1,
+           kI = 1e-4, 
+           kD = 1, 
+           kIz = 0, 
+           kFF = 0;
+    double gripperBall = 0,
+           gripperHatch = 0,
+           gripperClose = 0;
+    double elevatorLvl1 = 0,
+           elevatorLvl2 = 0,
+           elevatorLvl3 = 0,
+           elevator0 = 0;
+
     double Deadband(double, double);
-    double kP = 0.1, kI = 1e-4, kD = 1, kIz = 0, kFF = 0;
 };

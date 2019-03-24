@@ -27,55 +27,35 @@ void Robot::RobotInit() {
   elevatorPID.SetFF(0.0);
   //elevatorPID.SetIMaxAccum();
 
-  elevatorEncoder.SetPositionConversionFactor(1.0);
+  elevatorEncoder.SetPositionConversionFactor(2.26/460);
 
-  armSR.ConfigFactoryDefault();
-  armSL.ConfigFactoryDefault();
-  armER.ConfigFactoryDefault();
-  armEL.ConfigFactoryDefault();
+  gripperR.ConfigFactoryDefault();
+  gripperL.ConfigFactoryDefault();
 
-  int shoulderAbsPos = armSR.GetSelectedSensorPosition() & 0xFFF;
-  int elbowAbsPos = armER.GetSelectedSensorPosition() & 0xFFF;
+  int shoulderAbsPos = gripperR.GetSelectedSensorPosition() & 0xFFF;
 
-  armSR.SetSelectedSensorPosition(0);//shoulderAbsPos);
-  armER.SetSelectedSensorPosition(elbowAbsPos);
+  gripperR.SetSelectedSensorPosition(0);//shoulderAbsPos);
 
-  armSR.ConfigSelectedFeedbackSensor(FeedbackDevice::CTRE_MagEncoder_Relative);
-  armER.ConfigSelectedFeedbackSensor(FeedbackDevice::CTRE_MagEncoder_Relative);
+  gripperR.ConfigSelectedFeedbackSensor(FeedbackDevice::CTRE_MagEncoder_Relative);
 
-  armSR.ConfigFeedbackNotContinuous(true);
-  armER.ConfigFeedbackNotContinuous(true);
+  gripperR.ConfigFeedbackNotContinuous(true);
 
-  armSR.SetSensorPhase(false);
-  armER.SetSensorPhase(false);
+  gripperR.SetSensorPhase(false);
 
-  armSR.ConfigNominalOutputForward(0);
-	armSR.ConfigNominalOutputReverse(0);
-  armSR.ConfigPeakOutputForward(1);
-	armSR.ConfigPeakOutputReverse(-1);
+  gripperR.ConfigNominalOutputForward(0);
+	gripperR.ConfigNominalOutputReverse(0);
+  gripperR.ConfigPeakOutputForward(1);
+	gripperR.ConfigPeakOutputReverse(-1);
 
-  armER.ConfigNominalOutputForward(0);
-	armER.ConfigNominalOutputReverse(0);
-  armER.ConfigPeakOutputForward(1);
-	armER.ConfigPeakOutputReverse(-1);
+  gripperR.Config_kF(0, 0.0);
+	gripperR.Config_kP(0, 32);
+	gripperR.Config_kI(0, 0.00032);
+	gripperR.Config_kD(0, 1023);
 
-  armSR.Config_kF(0, 0.0);
-	armSR.Config_kP(0, 32);
-	armSR.Config_kI(0, 0.00032);
-	armSR.Config_kD(0, 1023);
+  gripperL.Follow(gripperR);
 
-  armER.Config_kF(0, 0.0);
-	armER.Config_kP(0, 8);
-	armER.Config_kI(0, 0.0024);
-	armER.Config_kD(0, 100);
-
-  armSL.Follow(armSR);
-  armEL.Follow(armER);
-
-  armSR.SetInverted(false);
-  armSL.SetInverted(InvertType::OpposeMaster);
-  armER.SetInverted(false);
-  armEL.SetInverted(InvertType::OpposeMaster);
+  gripperR.SetInverted(false);
+  gripperL.SetInverted(InvertType::OpposeMaster);
 
   camera1 = frc::CameraServer::GetInstance()->StartAutomaticCapture(0);
   camera2 = frc::CameraServer::GetInstance()->StartAutomaticCapture(1);
@@ -109,34 +89,11 @@ void Robot::RobotPeriodic() {}
  * make sure to add them to the chooser code above as well.
  */
 void Robot::AutonomousInit() {
-  m_autoSelected = m_chooser.GetSelected();
-  // m_autoSelected = SmartDashboard::GetString("Auto Selector",
-  //     kAutoNameDefault);
-  std::cout << "Auto selected: " << m_autoSelected << std::endl;
-
-  if (m_autoSelected == kAutoNameCustom) {
-    // Custom Auto goes here
-  } else {
-    // Default Auto goes here
-  }
+  prevElevatorPos = elevatorEncoder.GetPosition();
 }
 
 void Robot::AutonomousPeriodic() {
-  if (m_autoSelected == kAutoNameCustom) {
-    // Custom Auto goes here
-  } else {
-    // Default Auto goes here
-  }
-}
-
-void Robot::TeleopInit() {
-  prevPosShoulder = armSR.GetSelectedSensorPosition();
-  prevPosElbow = armER.GetSelectedSensorPosition();
-}
-
-void Robot::TeleopPeriodic() {
-  double targetPosShoulder; 
-  double targetPosElbow;
+  double targetElevatorPos;
 
   double p = frc::SmartDashboard::GetNumber("P Gain", 0);
   double i = frc::SmartDashboard::GetNumber("I Gain", 0);
@@ -153,21 +110,11 @@ void Robot::TeleopPeriodic() {
   double contAXR = Deadband(ControllerA.GetY(frc::GenericHID::kRightHand), 0.25);
   double contAXL = Deadband(ControllerA.GetY(frc::GenericHID::kLeftHand), 0.25);
 
-  targetPosShoulder = 25*contAXR + prevPosShoulder;
-  targetPosElbow = 12*contAXL + prevPosElbow;
+  targetElevatorPos = 25*contAXR + prevElevatorPos;
 
-  double bounds = cos(targetPosShoulder/4096*2*PI - targetPosElbow/4096*2*PI + 0.33)-cos(targetPosShoulder/4096*2*PI);
-  if(!(-0.61 < bounds && bounds < 1.61)){
-    targetPosShoulder = prevPosShoulder;
-    targetPosElbow = prevPosElbow;
-  }
-
-  if(targetPosElbow > 0){
-    targetPosElbow = 0;
-  }  
-
-  if(targetPosShoulder > 0){
-    targetPosShoulder = 0;
+  //put limit switch code here
+  if(targetElevatorPos > 0){
+    targetElevatorPos = 0;
   }
   
   mDrive.DriveCartesian(
@@ -175,30 +122,106 @@ void Robot::TeleopPeriodic() {
     -1*Controller.GetY(frc::GenericHID::kLeftHand),
     Controller.GetX(frc::GenericHID::kLeftHand)
   );
-
-  armSR.Set(ControlMode::Position, targetPosShoulder);
-  armER.Set(ControlMode::Position, targetPosElbow);
   
-  VacuuMotorPivot.Set(0.5*(ControllerA.GetTriggerAxis(frc::GenericHID::kLeftHand) + -1*ControllerA.GetTriggerAxis(frc::GenericHID::kRightHand)));
-  
-  if (ControllerA.GetAButton()){
-    VacuuMotor.Set(-1);
-  }else {
-    VacuuMotor.Set(0);
-  }
-
   if(ControllerA.GetBumper(frc::GenericHID::kRightHand)){
-    elevatorPID.SetReference(512, rev::kPosition);
+    elevatorPID.SetReference(2, rev::kPosition);
   }else{
-    elevator.Set(contAXL);
+    elevator.Set(contAXR);
   }
+  
+  // if(ControllerA.GetAButton()){
+  //   elevatorPID.SetReference(elevatorLvl1);
+  // }else if(ControllerA.GetBButton()){
+  //   elevatorPID.SetReference(elevatorLvl2);
+  // }else if(ControllerA.GetXButton()){
+  //   elevatorPID.SetReference(elevatorLvl3);
+  // }else if(ControllerA.GetYButton()){
+  //   elevatorPID.SetReference(elevator0);
+  // }else{
+  //   elevatorPID.SetReference(targetElevatorPos, rev::kPosition);
+  // }
+
+  gripperR.Set(ControlMode::Percent, contAXL);
+  // if(ControllerA.GetBumper(frc::GenericHID::kLeftHand)){
+  //   gripperR.Set(ControlMode::Position, gripperHatch);
+  // }else if(ControllerA.GetBumper(frc::GenericHID::kRightHand)){
+  //   gripperR.Set(ControlMode::Position, gripperBall);
+  // }else{
+  //   gripperR.Set(ControlMode::Position, gripperClose);
+  // }
 
   //std::cout << "Elevator position: " << elevatorEncoder.GetPosition() << std::endl;
   frc::SmartDashboard::PutNumber("Elevator position: ", elevatorEncoder.GetPosition());
 
-  prevPosShoulder = targetPosShoulder;//armSR.GetSelectedSensorPosition();
-  prevPosElbow = targetPosElbow;//armER.GetSelectedSensorPosition();
+  prevElevatorPos = targetPosShoulder;
+}
+
+void Robot::TeleopInit() {
+  prevElevatorPos = elevatorEncoder.GetPosition();
+}
+
+void Robot::TeleopPeriodic() {
+  double targetElevatorPos;
+
+  double p = frc::SmartDashboard::GetNumber("P Gain", 0);
+  double i = frc::SmartDashboard::GetNumber("I Gain", 0);
+  double d = frc::SmartDashboard::GetNumber("D Gain", 0);
+  double iz = frc::SmartDashboard::GetNumber("I Zone", 0);
+  double ff = frc::SmartDashboard::GetNumber("Feed Forward", 0);
+
+  if((p != kP)) { elevatorPID.SetP(p); kP = p; }
+  if((i != kI)) { elevatorPID.SetI(i); kI = i; }
+  if((d != kD)) { elevatorPID.SetD(d); kD = d; }
+  if((iz != kIz)) { elevatorPID.SetIZone(iz); kIz = iz; }
+  if((ff != kFF)) { elevatorPID.SetFF(ff); kFF = ff; }
+
+  double contAXR = Deadband(ControllerA.GetY(frc::GenericHID::kRightHand), 0.25);
+  double contAXL = Deadband(ControllerA.GetY(frc::GenericHID::kLeftHand), 0.25);
+
+  targetElevatorPos = 25*contAXR + prevElevatorPos;
+
+  //put limit switch code here
+  if(targetElevatorPos > 0){
+    targetElevatorPos = 0;
+  }
   
+  mDrive.DriveCartesian(
+    Controller.GetX(frc::GenericHID::kRightHand),
+    -1*Controller.GetY(frc::GenericHID::kLeftHand),
+    Controller.GetX(frc::GenericHID::kLeftHand)
+  );
+  
+  if(ControllerA.GetBumper(frc::GenericHID::kRightHand)){
+    elevatorPID.SetReference(2, rev::kPosition);
+  }else{
+    elevator.Set(contAXR);
+  }
+  
+  // if(ControllerA.GetAButton()){
+  //   elevatorPID.SetReference(elevatorLvl1);
+  // }else if(ControllerA.GetBButton()){
+  //   elevatorPID.SetReference(elevatorLvl2);
+  // }else if(ControllerA.GetXButton()){
+  //   elevatorPID.SetReference(elevatorLvl3);
+  // }else if(ControllerA.GetYButton()){
+  //   elevatorPID.SetReference(elevator0);
+  // }else{
+  //   elevatorPID.SetReference(targetElevatorPos, rev::kPosition);
+  // }
+
+  gripperR.Set(ControlMode::Percent, contAXL);
+  // if(ControllerA.GetBumper(frc::GenericHID::kLeftHand)){
+  //   gripperR.Set(ControlMode::Position, gripperHatch);
+  // }else if(ControllerA.GetBumper(frc::GenericHID::kRightHand)){
+  //   gripperR.Set(ControlMode::Position, gripperBall);
+  // }else{
+  //   gripperR.Set(ControlMode::Position, gripperClose);
+  // }
+
+  //std::cout << "Elevator position: " << elevatorEncoder.GetPosition() << std::endl;
+  frc::SmartDashboard::PutNumber("Elevator position: ", elevatorEncoder.GetPosition());
+
+  prevElevatorPos = targetPosShoulder;
 }
 
 void Robot::TestPeriodic() {}
