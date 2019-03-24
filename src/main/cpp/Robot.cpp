@@ -129,8 +129,8 @@ void Robot::TeleopPeriodic() {
   targetPosShoulder = 25*contAXR + prevPosShoulder;
   targetPosElbow = 12*contAXL + prevPosElbow;
 
-  double bounds = cos(targetPosShoulder/4096*2*PI - targetPosElbow/4096*2*PI)-cos(targetPosShoulder/4096*2*PI);
-  if(-0.61 < bounds && bounds < 1.61){
+  double bounds = cos(targetPosShoulder/4096*2*PI - targetPosElbow/4096*2*PI + 0.33)-cos(targetPosShoulder/4096*2*PI);
+  if(!(-0.61 < bounds && bounds < 1.61)){
     targetPosShoulder = prevPosShoulder;
     targetPosElbow = prevPosElbow;
   }
