@@ -60,4 +60,5 @@ class Robot : public frc::TimedRobot
     double prevPosShoulder, prevPosElbow;
     int loops = 0, pidloops = 0;
     double Deadband(double, double);
+    double kP = 0.1, kI = 1e-4, kD = 1, kIz = 0, kFF = 0;
 };

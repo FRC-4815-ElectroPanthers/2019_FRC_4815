@@ -79,8 +79,12 @@ void Robot::RobotInit() {
 
   camera1 = frc::CameraServer::GetInstance()->StartAutomaticCapture(0);
   camera2 = frc::CameraServer::GetInstance()->StartAutomaticCapture(1);
-  // camera1.SetConnectionStrategy(cs::VideoSource::ConnectionStrategy::kConnectionKeepOpen);
-  // camera2.SetConnectionStrategy(cs::VideoSource::ConnectionStrategy::kConnectionKeepOpen);
+  
+  frc::SmartDashboard::PutNumber("P Gain", kP);
+  frc::SmartDashboard::PutNumber("I Gain", kI);
+  frc::SmartDashboard::PutNumber("D Gain", kD);
+  frc::SmartDashboard::PutNumber("I Zone", kIz);
+  frc::SmartDashboard::PutNumber("Feed Forward", kFF);
 }
 
 /**
@@ -132,7 +136,19 @@ void Robot::TeleopInit() {
 
 void Robot::TeleopPeriodic() {
   double targetPosShoulder; 
-  double targetPosElbow; 
+  double targetPosElbow;
+
+  double p = frc::SmartDashboard::GetNumber("P Gain", 0);
+  double i = frc::SmartDashboard::GetNumber("I Gain", 0);
+  double d = frc::SmartDashboard::GetNumber("D Gain", 0);
+  double iz = frc::SmartDashboard::GetNumber("I Zone", 0);
+  double ff = frc::SmartDashboard::GetNumber("Feed Forward", 0);
+
+  if((p != kP)) { elevatorPID.SetP(p); kP = p; }
+  if((i != kI)) { elevatorPID.SetI(i); kI = i; }
+  if((d != kD)) { elevatorPID.SetD(d); kD = d; }
+  if((iz != kIz)) { elevatorPID.SetIZone(iz); kIz = iz; }
+  if((ff != kFF)) { elevatorPID.SetFF(ff); kFF = ff; }
 
   double contAXR = Deadband(ControllerA.GetY(frc::GenericHID::kRightHand), 0.25);
   double contAXL = Deadband(ControllerA.GetY(frc::GenericHID::kLeftHand), 0.25);
@@ -173,9 +189,12 @@ void Robot::TeleopPeriodic() {
 
   if(ControllerA.GetBumper(frc::GenericHID::kRightHand)){
     elevatorPID.SetReference(512, rev::kPosition);
+  }else{
+    elevator.Set(contAXL);
   }
 
-  std::cout << "Elevator position: " << elevatorEncoder.GetPosition() << std::endl;
+  //std::cout << "Elevator position: " << elevatorEncoder.GetPosition() << std::endl;
+  frc::SmartDashboard::PutNumber("Elevator position: ", elevatorEncoder.GetPosition());
 
   prevPosShoulder = targetPosShoulder;//armSR.GetSelectedSensorPosition();
   prevPosElbow = targetPosElbow;//armER.GetSelectedSensorPosition();
