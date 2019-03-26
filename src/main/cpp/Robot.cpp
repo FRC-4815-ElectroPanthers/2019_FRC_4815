@@ -16,7 +16,7 @@ void Robot::RobotInit() {
   m_chooser.SetDefaultOption(kAutoNameDefault, kAutoNameDefault);
   m_chooser.AddOption(kAutoNameCustom, kAutoNameCustom);
   frc::SmartDashboard::PutData("Auto Modes", &m_chooser);
-  mDrive.SetRightSideInverted(false);
+  mDrive.SetRightSideInverted(true);
 
   elevator.RestoreFactoryDefaults();
   elevator.SetInverted(false);
@@ -141,7 +141,7 @@ void Robot::AutonomousPeriodic() {
   //   elevatorPID.SetReference(targetElevatorPos, rev::kPosition);
   // }
 
-  gripperR.Set(ControlMode::Percent, contAXL);
+  gripperR.Set(ControlMode::PercentOutput, contAXL);
   // if(ControllerA.GetBumper(frc::GenericHID::kLeftHand)){
   //   gripperR.Set(ControlMode::Position, gripperHatch);
   // }else if(ControllerA.GetBumper(frc::GenericHID::kRightHand)){
@@ -153,7 +153,7 @@ void Robot::AutonomousPeriodic() {
   //std::cout << "Elevator position: " << elevatorEncoder.GetPosition() << std::endl;
   frc::SmartDashboard::PutNumber("Elevator position: ", elevatorEncoder.GetPosition());
 
-  prevElevatorPos = targetPosShoulder;
+  prevElevatorPos = targetElevatorPos;
 }
 
 void Robot::TeleopInit() {
@@ -172,7 +172,7 @@ void Robot::TeleopPeriodic() {
   if((p != kP)) { elevatorPID.SetP(p); kP = p; }
   if((i != kI)) { elevatorPID.SetI(i); kI = i; }
   if((d != kD)) { elevatorPID.SetD(d); kD = d; }
-  if((iz != kIz)) { elevatorPID.SetIZone(iz); kIz = iz; }
+  //if((iz != kIz)) { elevatorPID.SetIZone(iz); kIz = iz; }
   if((ff != kFF)) { elevatorPID.SetFF(ff); kFF = ff; }
 
   double contAXR = Deadband(ControllerA.GetY(frc::GenericHID::kRightHand), 0.25);
@@ -209,7 +209,7 @@ void Robot::TeleopPeriodic() {
   //   elevatorPID.SetReference(targetElevatorPos, rev::kPosition);
   // }
 
-  gripperR.Set(ControlMode::Percent, contAXL);
+  gripperR.Set(ControlMode::PercentOutput, contAXL);
   // if(ControllerA.GetBumper(frc::GenericHID::kLeftHand)){
   //   gripperR.Set(ControlMode::Position, gripperHatch);
   // }else if(ControllerA.GetBumper(frc::GenericHID::kRightHand)){
@@ -218,10 +218,14 @@ void Robot::TeleopPeriodic() {
   //   gripperR.Set(ControlMode::Position, gripperClose);
   // }
 
+  // if(limitTop.Get()){
+
+  // }
+
   //std::cout << "Elevator position: " << elevatorEncoder.GetPosition() << std::endl;
   frc::SmartDashboard::PutNumber("Elevator position: ", elevatorEncoder.GetPosition());
 
-  prevElevatorPos = targetPosShoulder;
+  prevElevatorPos = targetElevatorPos;
 }
 
 void Robot::TestPeriodic() {}

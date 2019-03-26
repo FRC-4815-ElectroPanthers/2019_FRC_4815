@@ -41,10 +41,10 @@ class Robot : public frc::TimedRobot
     frc::XboxController Controller{0};
     frc::XboxController ControllerA{1};
 
-    rev::CANSparkMax talonTL{4, rev::CANSparkMaxLowLevel::MotorType::kBrushed};
-    rev::CANSparkMax talonTR{2, rev::CANSparkMaxLowLevel::MotorType::kBrushed};
-    rev::CANSparkMax talonBL{3, rev::CANSparkMaxLowLevel::MotorType::kBrushed};
-    rev::CANSparkMax talonBR{1, rev::CANSparkMaxLowLevel::MotorType::kBrushed};
+    rev::CANSparkMax talonTL{4, rev::CANSparkMaxLowLevel::MotorType::kBrushless};
+    rev::CANSparkMax talonTR{2, rev::CANSparkMaxLowLevel::MotorType::kBrushless};
+    rev::CANSparkMax talonBL{3, rev::CANSparkMaxLowLevel::MotorType::kBrushless};
+    rev::CANSparkMax talonBR{1, rev::CANSparkMaxLowLevel::MotorType::kBrushless};
     frc::MecanumDrive mDrive{talonTL,talonBL,talonTR,talonBR};
     
     rev::CANSparkMax elevator{5, rev::CANSparkMaxLowLevel::MotorType::kBrushless};
@@ -52,8 +52,11 @@ class Robot : public frc::TimedRobot
     rev::CANEncoder elevatorEncoder{elevator};
     //limitswitch declarations
 
-    TalonSRX gripperR{6};
-    TalonSRX gripperL{7};
+    TalonSRX gripperL{6};
+    TalonSRX gripperR{7};
+
+    // frc::DigitalInput limitTop{0},
+    //                   limitBot{1};
     
     cs::UsbCamera camera1;
     cs::UsbCamera camera2;
